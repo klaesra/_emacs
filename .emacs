@@ -426,9 +426,14 @@ menu, add it to the menu bar."
 ;; Set emacs to reload last used buffers
 (desktop-save-mode 1)
 
+;; Allow emacs to use some otherwise dead latin characters
+(load-library "iso-transl")
+
 (setq linum-format "%d ")
 
 (linum-mode 1)
 
 (setq linum-format (lambda (line) (propertize (format (let ((w (length (number-to-string (count-lines (point-min) (point-max)))))) (concat "%" (number-to-string w) "d ")) line) 'face 'linum)))
 
+;; Set default font for emacs
+(set-default-font "Monospace-8")
