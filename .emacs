@@ -212,6 +212,9 @@ command may be described by either:
 (add-hook 'fortran-mode-hook (function compile-guess-command))
 
 
+(load "/usr/share/emacs/site-lisp/nxhtml/autostart")
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;
@@ -360,33 +363,42 @@ menu, add it to the menu bar."
 
 ;; End of file.
 (custom-set-variables
-  ;; custom-set-variables was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
  '(display-battery-mode t)
  '(display-time-mode t)
+ '(erc-hide-list (quote ("JOIN" "QUIT")))
  '(menu-bar-mode t)
- '(show-paren-mode t))
+ '(send-mail-function (quote smtpmail-send-it))
+ '(show-paren-mode t)
+ '(smtpmail-smtp-server "smtp.gmail.com")
+ '(smtpmail-smtp-service 25))
 (custom-set-faces
-  ;; custom-set-faces was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
- '(default ((t (:inherit (default family consolas) :stipple nil :background "black" :foreground "gray" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 90 :width normal :family "fixed")))))
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(default ((t (:inherit (default family consolas) :stipple nil :background "black" :foreground "gray" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 90 :width normal :family "fixed"))))
+ '(erc-input-face ((t (:foreground "deep sky blue"))))
+ '(erc-my-nick-face ((t (:foreground "cyan" :weight bold)))))
 
 ;; Make emacs load maximized under windows.
-(defun w32-maximize-frame ()
-  "Maximize the current frame"
-  (interactive)
-  (w32-send-sys-command 61488))
+;(defun w32-maximize-frame ()
+;  "Maximize the current frame"
+;  (interactive)
+;  (w32-send-sys-command 61488))
  
-(add-hook 'window-setup-hook 'w32-maximize-frame t)
+;(add-hook 'window-setup-hook 'w32-maximize-frame t)
 
 
 ;; My own settings:
 ;Compiler med pdflatex
 (setq TeX-PDF-mode t)
+
+;Set my email adress
+(setq mail-host-address "klaes.dk")
 
 ;Fjern statup msg!!!
 (setq inhibit-startup-message t)
@@ -420,7 +432,7 @@ menu, add it to the menu bar."
 (set-cursor-color "red")
 (set-mouse-color "green")
 (set-border-color "light green")
-(menu-bar-mode 0)
+(menu-bar-mode 1)
 (add-hook 'text-mode-hook 'turn-on-auto-fill)
 
 ;; Set emacs to reload last used buffers
@@ -437,3 +449,84 @@ menu, add it to the menu bar."
 
 ;; Set default font for emacs
 (set-default-font "Monospace-8")
+
+;; HTML w3m rendering for bitlbee
+(add-hook 'erc-insert-modify-hook 'mah/maybe-wash-im-with-w3m)
+   (autoload 'w3m-region "w3m" "Render region using w3m")
+   (defun mah/maybe-wash-im-with-w3m ()
+     "Wash the current im with emacs-w3m."
+     (save-restriction
+       (with-current-buffer (current-buffer)
+         (let ((case-fold-search t))
+ 	  (goto-char (point-min))
+ 	  (when (re-search-forward "<HTML>.*</HTML>" nil t)
+ 	    (print (match-string 0))
+ 	    (narrow-to-region (match-beginning 0) (match-end 0))
+ 	    (let ((w3m-safe-url-regexp mm-w3m-safe-url-regexp)
+ 		  w3m-force-redisplay)
+ 	      (w3m-region (point-min) (point-max))
+ 	      (goto-char (point-max))
+ 	      (delete-char -2))
+ 	    (when (and mm-inline-text-html-with-w3m-keymap
+ 		       (boundp 'w3m-minor-mode-map)
+ 		       w3m-minor-mode-map)
+ 	      (add-text-properties
+ 	       (point-min) (point-max)
+ 	       (list 'keymap w3m-minor-mode-map
+		     ;; Put the mark meaning this part was rendered by emacs-w3m.
+ 		     'mm-inline-text-html-with-w3m t))))))))
+
+
+;; Auto join channels and servers
+(require 'erc-services)
+    (erc-services-mode 1)
+
+    (setq erc-prompt-for-nickserv-password nil)
+
+    (add-hook 'erc-after-connect
+    	  '(lambda (SERVER NICK)
+    	     (cond
+    	      ((string-match "freenode\\.net" SERVER)
+    	       (erc-message "PRIVMSG" "NickServ identify uqjamz"))
+        
+    	      ((string-match "localhost" SERVER)
+    	       (erc-message "PRIVMSG" "&bitlbee identify uqjamz71")))))
+
+(setq erc-autojoin-channels-alist
+          '(("freenode.net" "#diku" "#zomg_pwnies")))
+
+(erc :server "irc.freenode.net" :port 6667 :nick "klaes")
+(erc :server "localhost" :port 6667 :nick "klaes")
+
+;; Make tray icon do something when people write on ERC
+;;list of regexpes ignored by tray icon
+(setq erc-tray-ignored-channels '("something" "something_else"))
+(defun erc-tray-change-state (arg)
+  "Enables or disable blinking, depending on arg"
+  (if arg
+      (shell-command-to-string
+       "echo B > /tmp/tray_daemon_control")
+    (shell-command-to-string
+     "echo b > /tmp/tray_daemon_control")))
+(defun erc-tray-update-state ()
+  "Updates the state of the tray icon according to the contents
+of erc-modified-channels-alist"
+  (interactive)
+  (unless erc-modified-channels-alist
+    (erc-tray-change-state nil))
+  (let ((filtered-list erc-modified-channels-alist))
+    (mapc (lambda (el)
+	    (mapc (lambda (reg)
+		    (when (string-match reg (buffer-name (car el)))
+		      (setq filtered-list
+			    (remove el filtered-list))))
+		  erc-tray-ignored-channels))
+	  filtered-list)
+    (when filtered-list
+      (erc-tray-change-state t))))
+(when window-system
+  (add-hook 'erc-track-list-changed-hook 'erc-tray-update-state))
+
+;; Set emacs to open some browser by default
+(setq browse-url-browser-function 'browse-url-generic
+         browse-url-generic-program "/home/klaes/bin/conkeror")
