@@ -6,6 +6,9 @@
 ;;
 ;; Now, it resides as .emacs.d/init.el
 
+;; Add extra load path to emacs
+(add-to-list 'load-path "~/lib/_emacs/")
+
 ;; Keep Emacs from executing file local variables.
 ;; (this is also in the site-init.el file loaded at emacs dump time.)
 (setq inhibit-local-variables t  ; v18
@@ -498,35 +501,126 @@ menu, add it to the menu bar."
 (erc :server "irc.freenode.net" :port 6667 :nick "klaes")
 (erc :server "localhost" :port 6667 :nick "klaes")
 
-;; Make tray icon do something when people write on ERC
-;;list of regexpes ignored by tray icon
-(setq erc-tray-ignored-channels '("something" "something_else"))
-(defun erc-tray-change-state (arg)
-  "Enables or disable blinking, depending on arg"
-  (if arg
-      (shell-command-to-string
-       "echo B > /tmp/tray_daemon_control")
-    (shell-command-to-string
-     "echo b > /tmp/tray_daemon_control")))
-(defun erc-tray-update-state ()
-  "Updates the state of the tray icon according to the contents
-of erc-modified-channels-alist"
+;;; Notify me when a keyword is matched (someone wants to reach me)
+
+(defvar my-erc-page-message "%s is calling your name."
+  "Format of message to display in dialog box")
+
+(defvar my-erc-page-nick-alist nil
+  "Alist of nicks and the last time they tried to trigger a
+notification")
+
+(defvar my-erc-page-timeout 30
+  "Number of seconds that must elapse between notifications from
+the same person.")
+
+(defun my-emacs-is-idle (&optional secs)
+  "Return a boolean whether emacs has been idle for more than
+  'secs', defaults to 20."
+  (< (or secs 20)
+     (float-time (or (current-idle-time)
+		     '(0 0 0)))))
+
+(defun my-erc-page-popup-notification (nick)
+  (when window-system
+    ;; must set default directory, otherwise start-process is unhappy
+    ;; when this is something remote or nonexistent
+    (let ((default-directory "~/"))
+      ;; 8640000 milliseconds = 1 day
+      (start-process "page-me" nil "notify-send"
+                     "-u" "normal" "-t" "8640000" "ERC"
+                     (format my-erc-page-message nick)))))
+
+(defun my-erc-page-allowed (nick &optional delay)
+  "Return non-nil if a notification should be made for NICK.
+If DELAY is specified, it will be the minimum time in seconds
+that can occur between two notifications.  The default is
+`my-erc-page-timeout'."
+  (unless delay (setq delay my-erc-page-timeout))
+  (let ((cur-time (time-to-seconds (current-time)))
+          (cur-assoc (assoc nick my-erc-page-nick-alist))
+          (last-time))
+      (if cur-assoc
+          (progn
+            (setq last-time (cdr cur-assoc))
+            (setcdr cur-assoc cur-time)
+            (> (abs (- cur-time last-time)) delay))
+        (push (cons nick cur-time) my-erc-page-nick-alist)
+        t)))
+
+(defun my-erc-page-me (match-type nick message)
+  "Notify the current user when someone sends a message that
+matches a regexp in `erc-keywords'."
   (interactive)
-  (unless erc-modified-channels-alist
-    (erc-tray-change-state nil))
-  (let ((filtered-list erc-modified-channels-alist))
-    (mapc (lambda (el)
-	    (mapc (lambda (reg)
-		    (when (string-match reg (buffer-name (car el)))
-		      (setq filtered-list
-			    (remove el filtered-list))))
-		  erc-tray-ignored-channels))
-	  filtered-list)
-    (when filtered-list
-      (erc-tray-change-state t))))
-(when window-system
-  (add-hook 'erc-track-list-changed-hook 'erc-tray-update-state))
+  (when (and (eq match-type 'keyword)
+             ;; I don't want to see anything from the erc server
+             (null (string-match "\\`\\([sS]erver\\|localhost\\)" nick))
+             ;; or bots
+             (null (string-match "\\(bot\\|serv\\)!" nick))
+             ;; or from those who abuse the system
+             (my-erc-page-allowed nick))
+    (my-erc-page-popup-notification nick)))
+(add-hook 'erc-text-matched-hook 'my-erc-page-me)
+
+(defun my-erc-page-me-PRIVMSG (proc parsed)
+  (let ((nick (car (erc-parse-user (erc-response.sender parsed))))
+        (target (car (erc-response.command-args parsed)))
+        (msg (erc-response.contents parsed)))
+    (when (and (erc-current-nick-p target)
+               (not (erc-is-message-ctcp-and-not-action-p msg))
+               (my-erc-page-allowed nick))
+      (my-erc-page-popup-notification nick)
+      nil)))
+(add-hook 'erc-server-PRIVMSG-functions 'my-erc-page-me-PRIVMSG)
+
+
+;; Make tray icon do something when people write on ERC
+(require 'erc)
+(require 'notifications)
+(defun erc-global-notify (match-type nick message)
+  "Notify when a message is recieved."
+  (if (my-emacs-is-idle 5)
+      (notifications-notify
+       :title nick
+       :body message
+       :app-icon "/var/abs/local/yaourtbuild/notify-osd-better-git/src/notify-osd-better/data/icons/scalable/notification-message-im.svg"
+       :urgency 'low)))
+
+(add-hook 'erc-text-matched-hook 'erc-global-notify)
+
 
 ;; Set emacs to open some browser by default
 (setq browse-url-browser-function 'browse-url-generic
          browse-url-generic-program "/home/klaes/bin/conkeror")
+
+;; Get bitlbee to show different colours for people online/offline, etc
+(erc-match-mode 1)
+(setq erc-keywords '((".*Online.*" (:foreground "green"))
+                     (".*Busy" (:foreground "red"))
+                     (".*Away" (:foreground "red"))
+                     (".*Idle" (:foreground "orange"))
+                     ("klaes *[,:;]" "\\bklaes[!?.]+$" "hey klaes" "localhost" erc-session-server "BitlBee" erc-session-server)
+                     ))
+
+;; LaTeX code in erc
+(require 'erc-tex)
+
+;; Save logs of chats
+(setq erc-log-channels-directory "~/.emacs.d/logs/")
+(setq erc-save-buffer-on-part nil)
+(setq erc-save-queries-on-quit nil
+      erc-log-write-after-send t
+      erc-log-write-after-insert t)
+
+;; Write to the last person I wrote to again
+(setq bitlbee-target "")
+(defun bitlbee-update-target (msg)
+  (if (string-match "\\([^:]*: \\)" msg)
+      (setq bitlbee-target (match-string 1 msg))
+    (if (not (or
+              (string-match "account" msg)
+              (string-match "help" msg)
+              (string-match "identify" msg)
+              (string-match "blist" msg)))
+        (setq str (concat bitlbee-target msg)))))
+(add-hook 'erc-send-pre-hook 'bitlbee-update-target)
