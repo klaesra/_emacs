@@ -503,14 +503,14 @@ menu, add it to the menu bar."
 
 ;;; Notify me when a keyword is matched (someone wants to reach me)
 
-(defvar my-erc-page-message "%s is calling your name."
+(defvar my-erc-page-message "%s is attempting to have a conversation with you!"
   "Format of message to display in dialog box")
 
 (defvar my-erc-page-nick-alist nil
   "Alist of nicks and the last time they tried to trigger a
 notification")
 
-(defvar my-erc-page-timeout 30
+(defvar my-erc-page-timeout 5
   "Number of seconds that must elapse between notifications from
 the same person.")
 
@@ -559,7 +559,8 @@ matches a regexp in `erc-keywords'."
              (null (string-match "\\(bot\\|serv\\)!" nick))
              ;; or from those who abuse the system
              (my-erc-page-allowed nick))
-    (my-erc-page-popup-notification nick)))
+    (if (my-emacs-is-idle my-erc-page-timeout)
+        (my-erc-page-popup-notification nick))))
 (add-hook 'erc-text-matched-hook 'my-erc-page-me)
 
 (defun my-erc-page-me-PRIVMSG (proc parsed)
@@ -579,7 +580,7 @@ matches a regexp in `erc-keywords'."
 (require 'notifications)
 (defun erc-global-notify (match-type nick message)
   "Notify when a message is recieved."
-  (if (my-emacs-is-idle 5)
+  (if (my-emacs-is-idle my-erc-page-timeout)
       (notifications-notify
        :title nick
        :body message
