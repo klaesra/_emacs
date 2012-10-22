@@ -8,6 +8,17 @@
 
 ;; Add extra load path to emacs
 (add-to-list 'load-path "~/lib/_emacs/")
+(add-to-list 'load-path "~/.cabal/share/ghc-mod-1.11.0/")
+(setenv "PATH"
+        (concat (expand-file-name "/home/klaes/bin/")
+                path-separator (getenv "PATH")))
+(setq exec-path (append exec-path '("/home/klaes/bin")))
+
+
+;; Add ghc-mode hook
+(autoload 'ghc-init "ghc" nil t)
+(add-hook 'haskell-mode-hook (lambda () (ghc-init) (flymake-mode)))
+
 
 ;; Keep Emacs from executing file local variables.
 ;; (this is also in the site-init.el file loaded at emacs dump time.)
@@ -87,6 +98,16 @@
 ;;;; of programming languages.
 ;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Haskell mode
+(load "/usr/share/emacs/site-lisp/haskell-mode/haskell-site-file")
+(autoload 'turn-on-haskell-doc-mode "haskell-doc" nil t)
+(add-hook 'haskell-mode-hook 'turn-on-haskell-doc-mode 'turn-on-haskell-indent) ; haskell-mode
+
+;; Erlang mode
+(setq erlang-root-dir "/usr/lib/erlang")
+(setq exec-path (cons "/usr/lib/erlang/bin" exec-path))
+(require 'erlang-start)
 
 ;; Load the C++ and C editing modes and specify which file extensions
 ;; correspond to which modes.
@@ -370,14 +391,15 @@ menu, add it to the menu bar."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(column-number-mode t)
  '(display-battery-mode t)
  '(display-time-mode t)
  '(erc-hide-list (quote ("JOIN" "QUIT")))
- '(menu-bar-mode t)
  '(send-mail-function (quote smtpmail-send-it))
  '(show-paren-mode t)
  '(smtpmail-smtp-server "smtp.gmail.com")
- '(smtpmail-smtp-service 25))
+ '(smtpmail-smtp-service 25)
+ '(tool-bar-mode nil))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -503,14 +525,14 @@ menu, add it to the menu bar."
 
 ;;; Notify me when a keyword is matched (someone wants to reach me)
 
-(defvar my-erc-page-message "%s is attempting to have a conversation with you!"
+(defvar my-erc-page-message "%s is talking to you!"
   "Format of message to display in dialog box")
 
 (defvar my-erc-page-nick-alist nil
   "Alist of nicks and the last time they tried to trigger a
 notification")
 
-(defvar my-erc-page-timeout 5
+(defvar my-erc-page-timeout 20
   "Number of seconds that must elapse between notifications from
 the same person.")
 
@@ -552,15 +574,17 @@ that can occur between two notifications.  The default is
   "Notify the current user when someone sends a message that
 matches a regexp in `erc-keywords'."
   (interactive)
-  (when (and (eq match-type 'keyword)
+  (when (and (my-emacs-is-idle 5)
+             (eq match-type 'keyword)
              ;; I don't want to see anything from the erc server
              (null (string-match "\\`\\([sS]erver\\|localhost\\)" nick))
              ;; or bots
              (null (string-match "\\(bot\\|serv\\)!" nick))
              ;; or from those who abuse the system
-             (my-erc-page-allowed nick))
-    (if (my-emacs-is-idle my-erc-page-timeout)
-        (my-erc-page-popup-notification nick))))
+             (my-erc-page-allowed nick)
+             ;; or from blist calls
+             (null (string-match "\\(localhost\\|root\\)" nick)))
+    (my-erc-page-popup-notification nick)))
 (add-hook 'erc-text-matched-hook 'my-erc-page-me)
 
 (defun my-erc-page-me-PRIVMSG (proc parsed)
@@ -580,7 +604,7 @@ matches a regexp in `erc-keywords'."
 (require 'notifications)
 (defun erc-global-notify (match-type nick message)
   "Notify when a message is recieved."
-  (if (my-emacs-is-idle my-erc-page-timeout)
+  (unless (my-emacs-is-idle my-erc-page-timeout)
       (notifications-notify
        :title nick
        :body message
@@ -600,7 +624,7 @@ matches a regexp in `erc-keywords'."
                      (".*Busy" (:foreground "red"))
                      (".*Away" (:foreground "red"))
                      (".*Idle" (:foreground "orange"))
-                     ("klaes *[,:;]" "\\bklaes[!?.]+$" "hey klaes" "localhost" erc-session-server "BitlBee" erc-session-server)
+                     ("klaes *[,:;]" "\\bklaes[!?.]+$" "hey klaes")
                      ))
 
 ;; LaTeX code in erc
@@ -614,14 +638,14 @@ matches a regexp in `erc-keywords'."
       erc-log-write-after-insert t)
 
 ;; Write to the last person I wrote to again
-(setq bitlbee-target "")
-(defun bitlbee-update-target (msg)
-  (if (string-match "\\([^:]*: \\)" msg)
-      (setq bitlbee-target (match-string 1 msg))
-    (if (not (or
-              (string-match "account" msg)
-              (string-match "help" msg)
-              (string-match "identify" msg)
-              (string-match "blist" msg)))
-        (setq str (concat bitlbee-target msg)))))
-(add-hook 'erc-send-pre-hook 'bitlbee-update-target)
+;(setq bitlbee-target "")
+;(defun bitlbee-update-target (msg)
+;  (if (string-match "\\([^:]*: \\)" msg)
+;      (setq bitlbee-target (match-string 1 msg))
+;    (if (not (or
+;              (string-match "account" msg)
+;              (string-match "help" msg)
+;              (string-match "identify" msg)
+;              (string-match "blist" msg)))
+;        (setq str (concat bitlbee-target msg)))))
+;(add-hook 'erc-send-pre-hook 'bitlbee-update-target)
