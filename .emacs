@@ -8,11 +8,51 @@
 
 ;; Add extra load path to emacs
 (add-to-list 'load-path "~/lib/_emacs/")
+(add-to-list 'load-path "~/lib/web-mode/")
 (add-to-list 'load-path "~/.cabal/share/ghc-mod-1.11.0/")
 (setenv "PATH"
         (concat (expand-file-name "/home/klaes/bin/")
                 path-separator (getenv "PATH")))
 (setq exec-path (append exec-path '("/home/klaes/bin")))
+
+;; multi-web-mode, use this OR web-mode
+;; (require 'multi-web-mode)
+;;   (setq mweb-default-major-mode 'html-mode)
+;;   (setq mweb-tags '((php-mode "<\?php\|<\? \|<\?=" "\?>")
+;;                     (js-mode "<script +\(type=\"text/javascript\"\|language=\"javascript\"\)[^>]*>" "</script>")
+;;                     (css-mode "<style +type=\"text/css\"[^>]*>" "</style>")))
+;;   (setq mweb-filename-extensions '("php" "htm" "html" "ctp" "phtml" "php4" "php5"))
+;;   (multi-web-global-mode 1)
+
+;; (autoload 'php-mode "php-mode.el" "Php mode." t)
+;; (setq auto-mode-alist (append '(("/*.\.php[345]?$" . php-mode)) auto-mode-alist))
+
+
+;; web-mode (php and html, etc mode, git maintained)
+(require 'web-mode)
+(add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.tpl\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.jsp\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.as[cp]x\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.php\\'" . web-mode))
+
+(defun web-mode-hook ()
+  "Hooks for Web mode."
+  (setq web-mode-markup-indent-offset 2)
+  (setq web-mode-markup-indent-offset 2)
+  (setq web-mode-css-indent-offset 2)
+  (setq web-mode-code-indent-offset 2)
+  (set-face-attribute 'web-mode-css-rule-face nil :foreground "Pink3")
+  ;(define-key web-mode-map (kbd "C-n") 'web-mode-match-tag)
+  (local-set-key (kbd "RET") 'newline-and-indent)
+  )
+(add-hook 'web-mode-hook 'web-mode-hook)
+
+
 
 
 ;; Add ghc-mode hook
@@ -105,9 +145,9 @@
 (add-hook 'haskell-mode-hook 'turn-on-haskell-doc-mode 'turn-on-haskell-indent) ; haskell-mode
 
 ;; Erlang mode
-(setq erlang-root-dir "/usr/lib/erlang")
-(setq exec-path (cons "/usr/lib/erlang/bin" exec-path))
-(require 'erlang-start)
+;;(setq erlang-root-dir "/usr/lib/erlang")
+;;(setq exec-path (cons "/usr/lib/erlang/bin" exec-path))
+;;(require 'erlang-start)
 
 ;; Load the C++ and C editing modes and specify which file extensions
 ;; correspond to which modes.
@@ -236,8 +276,6 @@ command may be described by either:
 (add-hook 'fortran-mode-hook (function compile-guess-command))
 
 
-(load "/usr/share/emacs/site-lisp/nxhtml/autostart")
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -319,16 +357,16 @@ See the documentation for the command `next-error' for more information."
 			 (format "ftnchek %s" file-name) nil nil
 			 '(check-history . 1))))
     (save-some-buffers nil nil)
-    (compile-internal check-command "Can't find next/previous error"
-		      "Checking" nil nil nil)))
+    (compilation-start check-command "Can't find next/previous error"
+		      "Checking" nil)))
 
 (defun make ()
   "Run make in the directory of the file contained in the current buffer"
   (interactive)
   (save-some-buffers nil nil)
-  (compile-internal (read-from-minibuffer "Make command: " "make ")
+  (compilation-start (read-from-minibuffer "Make command: " "make ")
 		    "Can't find next/previous error" "Make"
-		    nil nil nil))
+		    nil))
 
 
 ;;; Define a function to be called by the compiled language mode hooks.
@@ -379,7 +417,7 @@ menu, add it to the menu bar."
 (progn
  (define-key minibuffer-local-completion-map " " 'minibuffer-complete-word)
  (define-key minibuffer-local-filename-completion-map " " 'minibuffer-complete-word)
- (define-key minibuffer-local-must-match-filename-map " " 'minibuffer-complete-word)) 
+ (define-key minibuffer-local-must-match-map " " 'minibuffer-complete-word)) 
 
 ;; Art: added with v. 23.1
 ;; Set env variable this way?  I used the traditional way instead
@@ -466,14 +504,15 @@ menu, add it to the menu bar."
 ;; Allow emacs to use some otherwise dead latin characters
 (load-library "iso-transl")
 
+(add-hook 'find-file-hook (lambda () (linum-mode 1)))
+
+(global-linum-mode 1)
+
 (setq linum-format "%d ")
 
-(linum-mode 1)
-
-(setq linum-format (lambda (line) (propertize (format (let ((w (length (number-to-string (count-lines (point-min) (point-max)))))) (concat "%" (number-to-string w) "d ")) line) 'face 'linum)))
 
 ;; Set default font for emacs
-(set-default-font "Monospace-8")
+(set-frame-font "Monospace-8")
 
 ;; HTML w3m rendering for bitlbee
 (add-hook 'erc-insert-modify-hook 'mah/maybe-wash-im-with-w3m)
@@ -559,7 +598,7 @@ If DELAY is specified, it will be the minimum time in seconds
 that can occur between two notifications.  The default is
 `my-erc-page-timeout'."
   (unless delay (setq delay my-erc-page-timeout))
-  (let ((cur-time (time-to-seconds (current-time)))
+  (let ((cur-time (float-time (current-time)))
           (cur-assoc (assoc nick my-erc-page-nick-alist))
           (last-time))
       (if cur-assoc
