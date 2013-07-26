@@ -15,6 +15,57 @@
                 path-separator (getenv "PATH")))
 (setq exec-path (append exec-path '("/home/klaes/bin")))
 
+
+;; Multiple cursors in emacs
+(add-to-list 'load-path "/usr/share/emacs/site-lisp/multiple-cursors")
+(require 'multiple-cursors)
+(global-unset-key (kbd "C-<down-mouse-1>"))
+(global-set-key (kbd "C-<mouse-1>") 'mc/add-cursor-on-click)
+(global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines)
+(global-set-key (kbd "C->") 'mc/mark-next-like-this)
+(global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+(global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
+
+
+;; Auto completion mode in emacs
+(add-to-list 'load-path "/usr/share/emacs/site-lisp/auto-complete")
+(require 'auto-complete-config)
+(add-to-list 'ac-dictionary-directories "/usr/share/emacs/site-lisp/auto-complete/ac-dict")
+(ac-config-default)
+
+
+;; Auto indent mode in emacs
+(require 'auto-indent-mode)
+
+;; Extra modes from magnars
+(add-to-list 'load-path "/home/klaes/lib/magnars/.emacs.d/")
+(add-to-list 'load-path "/home/klaes/lib/magnars/.emacs.d/site-lisp/")
+(add-to-list 'load-path "/home/klaes/lib/magnars/.emacs.d/site-lisp/expand-region/")
+(add-to-list 'load-path "/home/klaes/lib/magnars/.emacs.d/site-lisp/rhtml-mode/")
+
+(load "rhtml-mode.el")
+(require 'rhtml-mode)
+(add-to-list 'auto-mode-alist '("\\.erb\\'" . rhtml-mode))
+
+(load "site-lisp/s/s.el")
+
+(load "site-lisp/expand-region/expand-region.el")
+(global-set-key (kbd "C-=") 'er/expand-region)
+
+(load "defuns/lisp-defuns.el")
+(global-set-key (kbd "C-x C-e") 'eval-and-replace)
+
+(load "defuns/buffer-defuns.el")
+(global-set-key (kbd "C-c n") 'cleanup-buffer)
+(defadvice sgml-delete-tag (after reindent-buffer activate)
+  (cleanup-buffer))
+
+(load "ace-jump-mode/ace-jump-mode.el")
+(global-set-key (kbd "C-'") 'ace-jump-mode)
+
+;; Extra keybinds
+(global-set-key (kbd "C-x C-i") 'ido-imenu)
+
 ;; multi-web-mode, use this OR web-mode
 ;; (require 'multi-web-mode)
 ;;   (setq mweb-default-major-mode 'html-mode)
@@ -28,29 +79,29 @@
 ;; (setq auto-mode-alist (append '(("/*.\.php[345]?$" . php-mode)) auto-mode-alist))
 
 
-;; web-mode (php and html, etc mode, git maintained)
-(require 'web-mode)
-(add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.tpl\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.jsp\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.as[cp]x\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.php\\'" . web-mode))
-
-(defun web-mode-hook ()
-  "Hooks for Web mode."
-  (setq web-mode-markup-indent-offset 2)
-  (setq web-mode-markup-indent-offset 2)
-  (setq web-mode-css-indent-offset 2)
-  (setq web-mode-code-indent-offset 2)
-  (set-face-attribute 'web-mode-css-rule-face nil :foreground "Pink3")
-  ;(define-key web-mode-map (kbd "C-n") 'web-mode-match-tag)
-  (local-set-key (kbd "RET") 'newline-and-indent)
-  )
-(add-hook 'web-mode-hook 'web-mode-hook)
+;;;; web-mode (php and html, etc mode, git maintained)
+;;(require 'web-mode)
+;;(add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
+;;(add-to-list 'auto-mode-alist '("\\.tpl\\'" . web-mode))
+;;(add-to-list 'auto-mode-alist '("\\.jsp\\'" . web-mode))
+;;(add-to-list 'auto-mode-alist '("\\.as[cp]x\\'" . web-mode))
+;;(add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
+;;(add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
+;;(add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
+;;(add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+;;(add-to-list 'auto-mode-alist '("\\.php\\'" . web-mode))
+;;
+;;(defun web-mode-hook ()
+;;  "Hooks for Web mode."
+;;  (setq web-mode-markup-indent-offset 2)
+;;  (setq web-mode-markup-indent-offset 2)
+;;  (setq web-mode-css-indent-offset 2)
+;;  (setq web-mode-code-indent-offset 2)
+;;  (set-face-attribute 'web-mode-css-rule-face nil :foreground "Pink3")
+;;                                        ;(define-key web-mode-map (kbd "C-n") 'web-mode-match-tag)
+;;  (local-set-key (kbd "RET") 'newline-and-indent)
+;;  )
+;;(add-hook 'web-mode-hook 'web-mode-hook)
 
 
 
@@ -74,63 +125,19 @@
 
 ;; Cause the region to be highlighted and prevent region-based commands
 ;; from running when the mark isn't active.
- 
-(pending-delete-mode t)
- (setq transient-mark-mode t)
 
-;(setq kill-emacs-query-functions
-;  (list (function (lambda ()
-;                    (ding)
-;                    (y-or-n-p "Er du nu lige helt sikker hva? Kunne du ikke bare sige til hvis du virkelig ville ud? ")))))
+(pending-delete-mode t)
+(setq transient-mark-mode t)
+
+                                        ;(setq kill-emacs-query-functions
+                                        ;  (list (function (lambda ()
+                                        ;                    (ding)
+                                        ;                    (y-or-n-p "Er du nu lige helt sikker hva? Kunne du ikke bare sige til hvis du virkelig ville ud? ")))))
 
 ;; Fonts are automatically highlighted.  For more information
-;; type M-x describe-mode font-lock-mode 
+;; type M-x describe-mode font-lock-mode
 
 (global-font-lock-mode t)
-
-;; "rmail" is the standard Emacs mail reading mode if you want try a
-;; different one then "vm" works well
-;;
-;; VM mail reading mode
-(autoload 'vm "vm" "Start VM on your primary inbox." t)
-(autoload 'vm-visit-folder "vm" "Start VM on an arbitrary folder." t)
-(autoload 'vm-visit-virtual-folder "vm" "Visit a VM virtual folder." t)
-(autoload 'vm-mode "vm" "Run VM major mode on a buffer" t)
-(autoload 'vm-mail "vm" "Send a mail message using VM." t)
-;;
-;; win-vm window+menus for VM (Use the above 5 autoloads or the following,
-;;                             but not both.)
-;;(let ((my-vm-pkg
-;;       (if (not window-system)
-;;	   "vm"
-;;	 (define-key menu-bar-file-menu [rmail] '("Read Mail" . vm))
-;;	 (define-key-after menu-bar-file-menu [smail]
-;;	   '("Send Mail" . vm-mail) 'rmail)
-;;	 "win-vm")))
-;;  (autoload 'vm my-vm-pkg "Read and send mail with View Mail." t)
-;;  (autoload 'vm-mode my-vm-pkg "Read and send mail with View Mail." t)
-;;  (autoload 'vm-mail my-vm-pkg "Send mail with View Mail." t)
-;;  (autoload 'vm-visit-folder my-vm-pkg))
-
-;; Some color stuff if you want it.
-;; (cond (window-system
-;;        (setq hilit-mode-enable-list  '(not text-mode)
-;;              hilit-background-mode   'light
-;;              hilit-inhibit-hooks     nil
-;;              hilit-inhibit-rebinding nil)
-;; 
-;;        (require 'hilit19)
-;;        ))
-;; 
-;; Example of how to set the highlighting of color defaults.
-;; (if (fboundp 'set-face-background)
-;;     (progn
-;;      (set-face-background (quote highlight) "yellow")
-;;      (set-face-foreground (quote highlight) "black")))
-
-
-;; Below are changes taken from the tutor .emacs file
-;; Added by Craig Ruefenacht
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;
@@ -144,6 +151,27 @@
 (autoload 'turn-on-haskell-doc-mode "haskell-doc" nil t)
 (add-hook 'haskell-mode-hook 'turn-on-haskell-doc-mode 'turn-on-haskell-indent) ; haskell-mode
 
+;;________________________________
+;;    ruby-mode
+;;________________________________
+
+(autoload 'ruby-mode "ruby-mode" "Ruby editing mode" t)
+
+(setq ruby-indent-level 4)
+;; Treat .rjs files as Ruby
+(setq auto-mode-alist (cons '("\\.rjs\\'" . ruby-mode) auto-mode-alist))
+;; Rakefiles are Ruby files:
+(setq auto-mode-alist (cons '("\\Rakefile\\'" . ruby-mode) auto-mode-alist))
+;; So is Gemfile:
+(setq auto-mode-alist (cons '("\\Gemfile\\'" . ruby-mode) auto-mode-alist))
+
+;; Fix curly brackets for ruby mode
+(add-hook 'ruby-mode-hook
+          (lambda ()
+            (define-key ruby-mode-map "{" nil)
+            (define-key ruby-mode-map "}" nil)))
+
+
 ;; Erlang mode
 ;;(setq erlang-root-dir "/usr/lib/erlang")
 ;;(setq exec-path (cons "/usr/lib/erlang/bin" exec-path))
@@ -152,19 +180,21 @@
 ;; Load the C++ and C editing modes and specify which file extensions
 ;; correspond to which modes.
 (autoload 'python-mode "python-mode" "Python editing mode." t)
-    (setq auto-mode-alist
-           (cons '("\\.py$" . python-mode) auto-mode-alist))
-     (setq interpreter-mode-alist
-           (cons '("python" . python-mode) interpreter-mode-alist))
+(setq auto-mode-alist
+      (cons '("\\.py$" . python-mode) auto-mode-alist))
+(setq interpreter-mode-alist
+      (cons '("python" . python-mode) interpreter-mode-alist))
 
 (autoload 'c++-mode "cc-mode" "C++ Editing Mode" t)
 (autoload 'c-mode "c-mode" "C Editing Mode"   t)
 (setq auto-mode-alist
-      (append '(("\\.C\\'" . c++-mode)
-                ("\\.cc\\'" . c++-mode)
-		("\\.c\\'" . c-mode)
-                ("\\.h\\'"  . c++-mode))
-	      auto-mode-alist))
+      (append '(("\\.C$"   . c++-mode)
+                ("\\.cc$"  . c++-mode)
+                ("\\.icc$" . c++-mode)
+                ("\\.c$"   . c-mode)
+                ("\\.y$"   . c-mode)
+                ("\\.h$"   . c++-mode))
+              auto-mode-alist))
 
 ;; set tab distance to something, so it doesn't change randomly and confuse people
 (setq c-basic-offset 4)
@@ -191,8 +221,8 @@
 ;; Fortran mode provides a special newline-and-indent function.
 
 (add-hook 'fortran-mode-hook
-	  (function (lambda ()
-		      (local-set-key "\C-m" 'fortran-indent-new-line))))
+          (function (lambda ()
+                      (local-set-key "\C-m" 'fortran-indent-new-line))))
 
 
 ;; Text-based modes (including mail, TeX, and LaTeX modes) are auto-filled.
@@ -222,7 +252,7 @@
 
 (defvar compile-guess-command-table
   '((c-mode       . "gcc -Wall -g %s -o %s -lm"); Doesn't work for ".h" files.
-    (c++-mode     . "g++ -g %s -o %s -lm")	; Doesn't work for ".h" files.
+    (c++-mode     . "g++ -g %s -o %s -lm")      ; Doesn't work for ".h" files.
     (fortran-mode . "f77 -C %s -o %s")
     )
   "*Association list of major modes to compilation command descriptions, used
@@ -244,28 +274,28 @@ command may be described by either:
 (defun compile-guess-command ()
 
   (let ((command-for-mode (cdr (assq major-mode
-				     compile-guess-command-table))))
+                                     compile-guess-command-table))))
     (if (and command-for-mode
-	     (stringp buffer-file-name))
-	(let* ((file-name (file-name-nondirectory buffer-file-name))
-	       (file-name-sans-suffix (if (and (string-match "\\.[^.]*\\'"
-							     file-name)
-					       (> (match-beginning 0) 0))
-					  (substring file-name
-						     0 (match-beginning 0))
-					nil)))
-	  (if file-name-sans-suffix
-	      (progn
-		(make-local-variable 'compile-command)
-		(setq compile-command
-		      (if (stringp command-for-mode)
-			  ;; Optimize the common case.
-			  (format command-for-mode
-				  file-name file-name-sans-suffix)
-			(funcall command-for-mode
-				 file-name file-name-sans-suffix)))
-		compile-command)
-	    nil))
+             (stringp buffer-file-name))
+        (let* ((file-name (file-name-nondirectory buffer-file-name))
+               (file-name-sans-suffix (if (and (string-match "\\.[^.]*\\'"
+                                                             file-name)
+                                               (> (match-beginning 0) 0))
+                                          (substring file-name
+                                                     0 (match-beginning 0))
+                                        nil)))
+          (if file-name-sans-suffix
+              (progn
+                (make-local-variable 'compile-command)
+                (setq compile-command
+                      (if (stringp command-for-mode)
+                          ;; Optimize the common case.
+                          (format command-for-mode
+                                  file-name file-name-sans-suffix)
+                        (funcall command-for-mode
+                                 file-name file-name-sans-suffix)))
+                compile-command)
+            nil))
       nil)))
 
 
@@ -305,23 +335,23 @@ various major mode hooks.")
   (setq compile-menu (make-sparse-keymap "Compile"))
   ;; Define the menu from the bottom up.
   (define-key compile-menu [first-error] '("    First Compilation Error" .
-					   first-compilation-error))
+                                           first-compilation-error))
   (define-key compile-menu [prev-error]  '("    Previous Compilation Error" .
-					   previous-compilation-error))
+                                           previous-compilation-error))
   (define-key compile-menu [next-error]  '("    Next Compilation Error" .
-					   next-error))
+                                           next-error))
   (define-key compile-menu [goto-line]   '("    Line Number..." .
-					   goto-line))
+                                           goto-line))
 
   (define-key compile-menu [goto]        '("Goto:" . nil))
   ;;
   (define-key compile-menu [indent-region] '("Indent Selection" .
-					     indent-region))
+                                             indent-region))
 
   (define-key compile-menu [make]         '("Make..." . make))
 
-  (define-key compile-menu [check-file]   '("Check This File..." . 
-					    check-file))
+  (define-key compile-menu [check-file]   '("Check This File..." .
+                                            check-file))
 
   (define-key compile-menu [compile]     '("Compile This File..." . compile))
   )
@@ -352,28 +382,28 @@ See the documentation for the command `next-error' for more information."
   "Run ftnchek on the file contained in the current buffer"
   (interactive)
   (let* ((file-name (file-name-nondirectory buffer-file-name))
-	 (check-command (read-from-minibuffer
-			 "Check command: "
-			 (format "ftnchek %s" file-name) nil nil
-			 '(check-history . 1))))
+         (check-command (read-from-minibuffer
+                         "Check command: "
+                         (format "ftnchek %s" file-name) nil nil
+                         '(check-history . 1))))
     (save-some-buffers nil nil)
     (compilation-start check-command "Can't find next/previous error"
-		      "Checking" nil)))
+                       "Checking" nil)))
 
 (defun make ()
   "Run make in the directory of the file contained in the current buffer"
   (interactive)
   (save-some-buffers nil nil)
   (compilation-start (read-from-minibuffer "Make command: " "make ")
-		    "Can't find next/previous error" "Make"
-		    nil))
+                     "Can't find next/previous error" "Make"
+                     nil))
 
 
 ;;; Define a function to be called by the compiled language mode hooks.
 
 (defun add-compile-menu-to-mode ()
   "If the current major mode doesn't already have access to the \"Compile\"
-menu, add it to the menu bar."
+ menu, add it to the menu bar."
   (if (memq major-mode compile-menu-modes)
       nil
     (local-set-key [menu-bar compile] (cons "Compile" compile-menu))
@@ -394,34 +424,28 @@ menu, add it to the menu bar."
 ;; This is how emacs tells the file type by the file suffix.
 (setq auto-mode-alist
       (append '(("\\.mss$" . scribe-mode))
-	      '(("\\.bib$" . bibtex-mode))
-	      '(("\\.tex$" . latex-mode))
-	      '(("\\.obj$" . lisp-mode))
-	      '(("\\.st$"  . smalltalk-mode))
-	      '(("\\.Z$"   . uncompress-while-visiting))
-	      '(("\\.cs$"  . indented-text-mode))
-	      '(("\\.C$"   . c++-mode))
-	      '(("\\.cc$"  . c++-mode))
-	      '(("\\.icc$" . c++-mode))
-	      '(("\\.c$"   . c-mode))
-	      '(("\\.y$"   . c-mode))
-	      '(("\\.h$"   . c++-mode))
-	      auto-mode-alist))
+              '(("\\.bib$" . bibtex-mode))
+              '(("\\.tex$" . latex-mode))
+              '(("\\.obj$" . lisp-mode))
+              '(("\\.st$"  . smalltalk-mode))
+              '(("\\.Z$"   . uncompress-while-visiting))
+              '(("\\.cs$"  . indented-text-mode))
+              auto-mode-alist))
 ;;
 ;; Finally look for .customs.emacs file and load it if found
 
-(if "~/.customs.emacs" 
+(if "~/.customs.emacs"
     (load "~/.customs.emacs" t t))
 
 ;; Art: added with v. 23.1 to make spacebar complete filenames (8/17/2009)
 (progn
- (define-key minibuffer-local-completion-map " " 'minibuffer-complete-word)
- (define-key minibuffer-local-filename-completion-map " " 'minibuffer-complete-word)
- (define-key minibuffer-local-must-match-map " " 'minibuffer-complete-word)) 
+  (define-key minibuffer-local-completion-map " " 'minibuffer-complete-word)
+  (define-key minibuffer-local-filename-completion-map " " 'minibuffer-complete-word)
+  (define-key minibuffer-local-must-match-map " " 'minibuffer-complete-word))
 
 ;; Art: added with v. 23.1
 ;; Set env variable this way?  I used the traditional way instead
-;(info "(emacs) Windows HOME")
+                                        ;(info "(emacs) Windows HOME")
 
 ;; End of file.
 (custom-set-variables
@@ -448,44 +472,44 @@ menu, add it to the menu bar."
  '(erc-my-nick-face ((t (:foreground "cyan" :weight bold)))))
 
 ;; Make emacs load maximized under windows.
-;(defun w32-maximize-frame ()
-;  "Maximize the current frame"
-;  (interactive)
-;  (w32-send-sys-command 61488))
- 
-;(add-hook 'window-setup-hook 'w32-maximize-frame t)
+                                        ;(defun w32-maximize-frame ()
+                                        ;  "Maximize the current frame"
+                                        ;  (interactive)
+                                        ;  (w32-send-sys-command 61488))
+
+                                        ;(add-hook 'window-setup-hook 'w32-maximize-frame t)
 
 
 ;; My own settings:
-;Compiler med pdflatex
+                                        ;Compiler med pdflatex
 (setq TeX-PDF-mode t)
 
-;Set my email adress
+                                        ;Set my email adress
 (setq mail-host-address "klaes.dk")
 
-;Fjern statup msg!!!
+                                        ;Fjern statup msg!!!
 (setq inhibit-startup-message t)
 
-;Fjern scratch message
+                                        ;Fjern scratch message
 (setq initial-scratch-message nil)
 
-;Fjern toolbar og scroll
+                                        ;Fjern toolbar og scroll
 (tool-bar-mode 0)
 (toggle-scroll-bar 0)
 
 ;; function to reload .emacs
-  (defun reload () (interactive)
-    "Reload ~/.emacs"
-    (if (file-exists-p "~/.emacs")
-    (load-file "~/.emacs")))
+(defun reload () (interactive)
+  "Reload ~/.emacs"
+  (if (file-exists-p "~/.emacs")
+      (load-file "~/.emacs")))
 
-;battery showgo
+                                        ;battery showgo
 (display-battery-mode t)
 (show-paren-mode t)
 
 ;; highlight the current line
 (global-hl-line-mode 1)
- 
+
 ;; To customize the background color
 (set-face-background 'hl-line "#330")
 
@@ -512,75 +536,76 @@ menu, add it to the menu bar."
 
 
 ;; Set default font for emacs
-(set-frame-font "Monospace-8")
+(set-frame-font "DejaVu Sans Mono-11")
 
 ;; HTML w3m rendering for bitlbee
 (add-hook 'erc-insert-modify-hook 'mah/maybe-wash-im-with-w3m)
-   (autoload 'w3m-region "w3m" "Render region using w3m")
-   (defun mah/maybe-wash-im-with-w3m ()
-     "Wash the current im with emacs-w3m."
-     (save-restriction
-       (with-current-buffer (current-buffer)
-         (let ((case-fold-search t))
- 	  (goto-char (point-min))
- 	  (when (re-search-forward "<HTML>.*</HTML>" nil t)
- 	    (print (match-string 0))
- 	    (narrow-to-region (match-beginning 0) (match-end 0))
- 	    (let ((w3m-safe-url-regexp mm-w3m-safe-url-regexp)
- 		  w3m-force-redisplay)
- 	      (w3m-region (point-min) (point-max))
- 	      (goto-char (point-max))
- 	      (delete-char -2))
- 	    (when (and mm-inline-text-html-with-w3m-keymap
- 		       (boundp 'w3m-minor-mode-map)
- 		       w3m-minor-mode-map)
- 	      (add-text-properties
- 	       (point-min) (point-max)
- 	       (list 'keymap w3m-minor-mode-map
-		     ;; Put the mark meaning this part was rendered by emacs-w3m.
- 		     'mm-inline-text-html-with-w3m t))))))))
-
+(autoload 'w3m-region "w3m" "Render region using w3m")
+(defun mah/maybe-wash-im-with-w3m ()
+  "Wash the current im with emacs-w3m."
+  (save-restriction
+    (with-current-buffer (current-buffer)
+      (let ((case-fold-search t))
+        (goto-char (point-min))
+        (when (re-search-forward "<HTML>.*</HTML>" nil t)
+          (print (match-string 0))
+          (narrow-to-region (match-beginning 0) (match-end 0))
+          (let ((w3m-safe-url-regexp mm-w3m-safe-url-regexp)
+                w3m-force-redisplay)
+            (w3m-region (point-min) (point-max))
+            (goto-char (point-max))
+            (delete-char -2))
+          (when (and mm-inline-text-html-with-w3m-keymap
+                     (boundp 'w3m-minor-mode-map)
+                     w3m-minor-mode-map)
+            (add-text-properties
+             (point-min) (point-max)
+             (list 'keymap w3m-minor-mode-map
+                   ;; Put the mark meaning this part was rendered by emacs-w3m.
+                   'mm-inline-text-html-with-w3m t))))))))
 
 ;; Auto join channels and servers
 (require 'erc-services)
-    (erc-services-mode 1)
+(erc-services-mode 1)
 
-    (setq erc-prompt-for-nickserv-password nil)
+(setq erc-prompt-for-nickserv-password nil)
 
-    (add-hook 'erc-after-connect
-    	  '(lambda (SERVER NICK)
-    	     (cond
-    	      ((string-match "freenode\\.net" SERVER)
-    	       (erc-message "PRIVMSG" "NickServ identify uqjamz"))
-        
-    	      ((string-match "localhost" SERVER)
-    	       (erc-message "PRIVMSG" "&bitlbee identify uqjamz71")))))
+(add-hook 'erc-after-connect
+          '(lambda (SERVER NICK)
+             (cond
+              ((string-match "freenode\\.net" SERVER)
+               (erc-message "PRIVMSG" "NickServ identify uqjamz"))
+
+              ((string-match "localhost" SERVER)
+               (erc-message "PRIVMSG" "&bitlbee identify uqjamz71")))))
 
 (setq erc-autojoin-channels-alist
-          '(("freenode.net" "#diku" "#zomg_pwnies")))
+      '(("freenode.net" "#diku" "#zomg_pwnies")))
 
 (erc :server "irc.freenode.net" :port 6667 :nick "klaes")
 (erc :server "localhost" :port 6667 :nick "klaes")
 
-;;; Notify me when a keyword is matched (someone wants to reach me)
+ ;;; Notify me when a keyword is matched (someone wants to reach me)
+
+(setq erc-auto-discard-away t)
 
 (defvar my-erc-page-message "%s is talking to you!"
   "Format of message to display in dialog box")
 
 (defvar my-erc-page-nick-alist nil
   "Alist of nicks and the last time they tried to trigger a
-notification")
+ notification")
 
-(defvar my-erc-page-timeout 20
+(defvar my-erc-page-timeout 45
   "Number of seconds that must elapse between notifications from
-the same person.")
+ the same person.")
 
 (defun my-emacs-is-idle (&optional secs)
   "Return a boolean whether emacs has been idle for more than
-  'secs', defaults to 20."
-  (< (or secs 20)
+   'secs', defaults to 20."
+  (< (or secs my-erc-page-timeout)
      (float-time (or (current-idle-time)
-		     '(0 0 0)))))
+                     '(0 0 0)))))
 
 (defun my-erc-page-popup-notification (nick)
   (when window-system
@@ -594,26 +619,28 @@ the same person.")
 
 (defun my-erc-page-allowed (nick &optional delay)
   "Return non-nil if a notification should be made for NICK.
-If DELAY is specified, it will be the minimum time in seconds
-that can occur between two notifications.  The default is
-`my-erc-page-timeout'."
+ If DELAY is specified, it will be the minimum time in seconds
+ that can occur between two notifications.  The default is
+ `my-erc-page-timeout'."
   (unless delay (setq delay my-erc-page-timeout))
   (let ((cur-time (float-time (current-time)))
-          (cur-assoc (assoc nick my-erc-page-nick-alist))
-          (last-time))
-      (if cur-assoc
-          (progn
-            (setq last-time (cdr cur-assoc))
-            (setcdr cur-assoc cur-time)
-            (> (abs (- cur-time last-time)) delay))
-        (push (cons nick cur-time) my-erc-page-nick-alist)
-        t)))
+        (cur-assoc (assoc nick my-erc-page-nick-alist))
+        (last-time))
+    (if cur-assoc
+        (progn
+          (setq last-time (cdr cur-assoc))
+          (setcdr cur-assoc cur-time)
+          (> (abs (- cur-time last-time)) delay))
+      (push (cons nick cur-time) my-erc-page-nick-alist)
+      t)))
 
 (defun my-erc-page-me (match-type nick message)
   "Notify the current user when someone sends a message that
-matches a regexp in `erc-keywords'."
+ matches a regexp in `erc-keywords'."
   (interactive)
   (when (and (my-emacs-is-idle 5)
+             ;; Dont show notifications if already typing in the convo
+             ;;(away-p) ;; it dudnt fecking w0rk
              (eq match-type 'keyword)
              ;; I don't want to see anything from the erc server
              (null (string-match "\\`\\([sS]erver\\|localhost\\)" nick))
@@ -644,18 +671,18 @@ matches a regexp in `erc-keywords'."
 (defun erc-global-notify (match-type nick message)
   "Notify when a message is recieved."
   (unless (my-emacs-is-idle my-erc-page-timeout)
-      (notifications-notify
-       :title nick
-       :body message
-       :app-icon "/var/abs/local/yaourtbuild/notify-osd-better-git/src/notify-osd-better/data/icons/scalable/notification-message-im.svg"
-       :urgency 'low)))
+    (notifications-notify
+     :title nick
+     :body message
+     :app-icon "/var/abs/local/yaourtbuild/notify-osd-better-git/src/notify-osd-better/data/icons/scalable/notification-message-im.svg"
+     :urgency 'low)))
 
 (add-hook 'erc-text-matched-hook 'erc-global-notify)
 
 
 ;; Set emacs to open some browser by default
 (setq browse-url-browser-function 'browse-url-generic
-         browse-url-generic-program "/home/klaes/bin/conkeror")
+      browse-url-generic-program "conkeror")
 
 ;; Get bitlbee to show different colours for people online/offline, etc
 (erc-match-mode 1)
@@ -677,14 +704,17 @@ matches a regexp in `erc-keywords'."
       erc-log-write-after-insert t)
 
 ;; Write to the last person I wrote to again
-;(setq bitlbee-target "")
-;(defun bitlbee-update-target (msg)
-;  (if (string-match "\\([^:]*: \\)" msg)
-;      (setq bitlbee-target (match-string 1 msg))
-;    (if (not (or
-;              (string-match "account" msg)
-;              (string-match "help" msg)
-;              (string-match "identify" msg)
-;              (string-match "blist" msg)))
-;        (setq str (concat bitlbee-target msg)))))
-;(add-hook 'erc-send-pre-hook 'bitlbee-update-target)
+                                        ;(setq bitlbee-target "")
+                                        ;(defun bitlbee-update-target (msg)
+                                        ;  (if (string-match "\\([^:]*: \\)" msg)
+                                        ;      (setq bitlbee-target (match-string 1 msg))
+                                        ;    (if (not (or
+                                        ;              (string-match "account" msg)
+                                        ;              (string-match "help" msg)
+                                        ;              (string-match "identify" msg)
+                                        ;              (string-match "blist" msg)))
+                                        ;        (setq str (concat bitlbee-target msg)))))
+                                        ;(add-hook 'erc-send-pre-hook 'bitlbee-update-target)
+
+;; Stop the silly bell
+(setq ring-bell-function 'ignore)
