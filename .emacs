@@ -7,9 +7,10 @@
 ;; Now, it resides as .emacs.d/init.el
 
 ;; Add extra load path to emacs
-(add-to-list 'load-path "~/lib/_emacs/")
-(add-to-list 'load-path "~/lib/web-mode/")
-(add-to-list 'load-path "~/.cabal/share/ghc-mod-1.11.0/")
+(add-to-list 'load-path "/home/klaes/lib/_emacs/")
+(add-to-list 'load-path "/home/klaes/lib/web-mode/")
+(add-to-list 'load-path "/home/klaes/.cabal/share/ghc-mod-1.11.0/")
+(add-to-list 'load-path "/usr/bin/")
 (setenv "PATH"
         (concat (expand-file-name "/home/klaes/bin/")
                 path-separator (getenv "PATH")))
@@ -33,6 +34,8 @@
 (add-to-list 'ac-dictionary-directories "/usr/share/emacs/site-lisp/auto-complete/ac-dict")
 (ac-config-default)
 
+;; Use zsh mode
+(add-to-list 'auto-mode-alist '("\\.zsh\\'" . shell-script-mode))
 
 ;; Auto indent mode in emacs
 (require 'auto-indent-mode)
@@ -41,11 +44,7 @@
 (add-to-list 'load-path "/home/klaes/lib/magnars/.emacs.d/")
 (add-to-list 'load-path "/home/klaes/lib/magnars/.emacs.d/site-lisp/")
 (add-to-list 'load-path "/home/klaes/lib/magnars/.emacs.d/site-lisp/expand-region/")
-(add-to-list 'load-path "/home/klaes/lib/magnars/.emacs.d/site-lisp/rhtml-mode/")
-
-(load "rhtml-mode.el")
-(require 'rhtml-mode)
-(add-to-list 'auto-mode-alist '("\\.erb\\'" . rhtml-mode))
+;;(add-to-list 'load-path "/home/klaes/lib/magnars/.emacs.d/site-lisp/rhtml-mode/")
 
 (load "site-lisp/s/s.el")
 
@@ -66,42 +65,36 @@
 ;; Extra keybinds
 (global-set-key (kbd "C-x C-i") 'ido-imenu)
 
-;; multi-web-mode, use this OR web-mode
-;; (require 'multi-web-mode)
-;;   (setq mweb-default-major-mode 'html-mode)
-;;   (setq mweb-tags '((php-mode "<\?php\|<\? \|<\?=" "\?>")
-;;                     (js-mode "<script +\(type=\"text/javascript\"\|language=\"javascript\"\)[^>]*>" "</script>")
-;;                     (css-mode "<style +type=\"text/css\"[^>]*>" "</style>")))
-;;   (setq mweb-filename-extensions '("php" "htm" "html" "ctp" "phtml" "php4" "php5"))
-;;   (multi-web-global-mode 1)
-
-;; (autoload 'php-mode "php-mode.el" "Php mode." t)
-;; (setq auto-mode-alist (append '(("/*.\.php[345]?$" . php-mode)) auto-mode-alist))
-
+;; CSS
+(add-to-list 'auto-mode-alist '("\\.scss$" . css-mode))
 
 ;;;; web-mode (php and html, etc mode, git maintained)
-;;(require 'web-mode)
-;;(add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
-;;(add-to-list 'auto-mode-alist '("\\.tpl\\'" . web-mode))
-;;(add-to-list 'auto-mode-alist '("\\.jsp\\'" . web-mode))
-;;(add-to-list 'auto-mode-alist '("\\.as[cp]x\\'" . web-mode))
-;;(add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
-;;(add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
-;;(add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
-;;(add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
-;;(add-to-list 'auto-mode-alist '("\\.php\\'" . web-mode))
-;;
-;;(defun web-mode-hook ()
-;;  "Hooks for Web mode."
-;;  (setq web-mode-markup-indent-offset 2)
-;;  (setq web-mode-markup-indent-offset 2)
-;;  (setq web-mode-css-indent-offset 2)
-;;  (setq web-mode-code-indent-offset 2)
-;;  (set-face-attribute 'web-mode-css-rule-face nil :foreground "Pink3")
-;;                                        ;(define-key web-mode-map (kbd "C-n") 'web-mode-match-tag)
-;;  (local-set-key (kbd "RET") 'newline-and-indent)
-;;  )
-;;(add-hook 'web-mode-hook 'web-mode-hook)
+(require 'web-mode)
+(add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.tpl\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.jsp\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.as[cp]x\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.php\\'" . web-mode))
+
+(defun web-mode-hook ()
+  "Hooks for Web mode."
+  (setq web-mode-markup-indent-offset 2)
+  (setq web-mode-markup-indent-offset 2)
+  (setq web-mode-css-indent-offset 2)
+  (setq web-mode-code-indent-offset 2)
+  ;(set-face-attribute 'web-mode-css-rule-face nil :foreground "Pink3")
+                                        ;(define-key web-mode-map (kbd "C-n") 'web-mode-match-tag)
+  (local-set-key (kbd "RET") 'newline-and-indent)
+  (setq auto-complete-mode t)
+  (setq debug-on-error t)
+  )
+(add-hook 'web-mode-hook 'web-mode-hook)
+(defadvice web-mode-element-close (after reindent-buffer activate)
+  (cleanup-buffer))
 
 
 
@@ -110,18 +103,11 @@
 (autoload 'ghc-init "ghc" nil t)
 (add-hook 'haskell-mode-hook (lambda () (ghc-init) (flymake-mode)))
 
-
 ;; Keep Emacs from executing file local variables.
 ;; (this is also in the site-init.el file loaded at emacs dump time.)
 (setq inhibit-local-variables t  ; v18
       enable-local-variables nil ; v19
-      enable-local-eval nil)     ; v19
-
-;; Swap Backspace and Delete keys, except for v19 running under X.  This works
-;; on both HPs and Suns.
-(or (and (eq window-system 'x)
-         (string-match "\\`19\\." emacs-version))
-    (load "term/bobcat"))
+      enable-local-eval nil)     ; v19)
 
 ;; Cause the region to be highlighted and prevent region-based commands
 ;; from running when the mark isn't active.
@@ -129,10 +115,6 @@
 (pending-delete-mode t)
 (setq transient-mark-mode t)
 
-                                        ;(setq kill-emacs-query-functions
-                                        ;  (list (function (lambda ()
-                                        ;                    (ding)
-                                        ;                    (y-or-n-p "Er du nu lige helt sikker hva? Kunne du ikke bare sige til hvis du virkelig ville ud? ")))))
 
 ;; Fonts are automatically highlighted.  For more information
 ;; type M-x describe-mode font-lock-mode
@@ -149,7 +131,8 @@
 ;; Haskell mode
 (load "/usr/share/emacs/site-lisp/haskell-mode/haskell-site-file")
 (autoload 'turn-on-haskell-doc-mode "haskell-doc" nil t)
-(add-hook 'haskell-mode-hook 'turn-on-haskell-doc-mode 'turn-on-haskell-indent) ; haskell-mode
+(add-hook 'haskell-mode-hook 'turn-on-haskell-doc-mode)
+(add-hook 'haskell-mode-hook 'turn-on-haskell-indentation)
 
 ;;________________________________
 ;;    ruby-mode
@@ -434,8 +417,8 @@ See the documentation for the command `next-error' for more information."
 ;;
 ;; Finally look for .customs.emacs file and load it if found
 
-(if "~/.customs.emacs"
-    (load "~/.customs.emacs" t t))
+(if "/home/klaes/.customs.emacs"
+    (load "/home/klaes/.customs.emacs" t t))
 
 ;; Art: added with v. 23.1 to make spacebar complete filenames (8/17/2009)
 (progn
@@ -500,8 +483,8 @@ See the documentation for the command `next-error' for more information."
 ;; function to reload .emacs
 (defun reload () (interactive)
   "Reload ~/.emacs"
-  (if (file-exists-p "~/.emacs")
-      (load-file "~/.emacs")))
+  (if (file-exists-p "/home/klaes/.emacs")
+      (load-file "/home/klaes/.emacs")))
 
                                         ;battery showgo
 (display-battery-mode t)
@@ -538,7 +521,21 @@ See the documentation for the command `next-error' for more information."
 ;; Set default font for emacs
 (set-frame-font "DejaVu Sans Mono-11")
 
-;; HTML w3m rendering for bitlbee
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Settings for irc things ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(require 'package)
+(add-to-list 'package-archives
+             '("marmalade" .
+               "http://marmalade-repo.org/packages/"))
+(package-initialize)
+
+(load-file "/home/klaes/.private.el")
+
+;; Render html with w3m
+(require 'w3m-load)
 (add-hook 'erc-insert-modify-hook 'mah/maybe-wash-im-with-w3m)
 (autoload 'w3m-region "w3m" "Render region using w3m")
 (defun mah/maybe-wash-im-with-w3m ()
@@ -564,28 +561,46 @@ See the documentation for the command `next-error' for more information."
                    ;; Put the mark meaning this part was rendered by emacs-w3m.
                    'mm-inline-text-html-with-w3m t))))))))
 
-;; Auto join channels and servers
+;; Join channels and servers
 (require 'erc-services)
 (erc-services-mode 1)
 
 (setq erc-prompt-for-nickserv-password nil)
 
-(add-hook 'erc-after-connect
-          '(lambda (SERVER NICK)
-             (cond
-              ((string-match "freenode\\.net" SERVER)
-               (erc-message "PRIVMSG" "NickServ identify uqjamz"))
+(add-hook 'erc-join-hook 'bitlbee-identify)
+(defun bitlbee-identify ()
+  "If we're on the bitlbee server, send the identify command to the
+ &bitlbee channel."
+  (when (and (string= "localhost" erc-session-server)
+             (string= "&bitlbee" (buffer-name)))
+    (erc-message "PRIVMSG" (format "%s identify %s"
+                                   (erc-default-target)
+                                   bitlbee-password))))
 
-              ((string-match "localhost" SERVER)
-               (erc-message "PRIVMSG" "&bitlbee identify uqjamz71")))))
+(add-hook 'erc-join-hook 'freenode-identify)
+(defun freenode-identify ()
+  "If we're on the bitlbee server, send the identify command to the
+ &bitlbee channel."
+  (when (and (string= "irc.freenode.net" erc-session-server)
+             (string= "NickServ"))
+    (erc-message "PRIVMSG" (format "%s identify %s"
+                                   (erc-default-target)
+                                   freenode-password))))
+
+
 
 (setq erc-autojoin-channels-alist
       '(("freenode.net" "#diku" "#zomg_pwnies")))
 
-(erc :server "irc.freenode.net" :port 6667 :nick "klaes")
-(erc :server "localhost" :port 6667 :nick "klaes")
 
- ;;; Notify me when a keyword is matched (someone wants to reach me)
+(defun bitlbee () (interactive)
+  (erc :server "localhost" :port 6667 :nick "klaes")
+  )
+
+(defun ercfreenode () (interactive)
+  (erc :server "irc.freenode.net" :port 6667 :nick "klaes")
+  )
+
 
 (setq erc-auto-discard-away t)
 
@@ -596,7 +611,7 @@ See the documentation for the command `next-error' for more information."
   "Alist of nicks and the last time they tried to trigger a
  notification")
 
-(defvar my-erc-page-timeout 45
+(defvar my-erc-page-timeout 30
   "Number of seconds that must elapse between notifications from
  the same person.")
 
@@ -611,10 +626,10 @@ See the documentation for the command `next-error' for more information."
   (when window-system
     ;; must set default directory, otherwise start-process is unhappy
     ;; when this is something remote or nonexistent
-    (let ((default-directory "~/"))
+    (let ((default-directory "/home/klaes/"))
       ;; 8640000 milliseconds = 1 day
       (start-process "page-me" nil "notify-send"
-                     "-u" "normal" "-t" "8640000" "ERC"
+                     "-u" "normal" "-t" "2000" "ERC"
                      (format my-erc-page-message nick)))))
 
 (defun my-erc-page-allowed (nick &optional delay)
@@ -638,7 +653,7 @@ See the documentation for the command `next-error' for more information."
   "Notify the current user when someone sends a message that
  matches a regexp in `erc-keywords'."
   (interactive)
-  (when (and (my-emacs-is-idle 5)
+  (when (and (my-emacs-is-idle)
              ;; Dont show notifications if already typing in the convo
              ;;(away-p) ;; it dudnt fecking w0rk
              (eq match-type 'keyword)
@@ -697,7 +712,7 @@ See the documentation for the command `next-error' for more information."
 (require 'erc-tex)
 
 ;; Save logs of chats
-(setq erc-log-channels-directory "~/.emacs.d/logs/")
+(setq erc-log-channels-directory "/home/klaes/.emacs.d/logs/")
 (setq erc-save-buffer-on-part nil)
 (setq erc-save-queries-on-quit nil
       erc-log-write-after-send t
