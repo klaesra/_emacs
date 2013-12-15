@@ -10,12 +10,17 @@
 (add-to-list 'load-path "/home/klaes/lib/_emacs/")
 (add-to-list 'load-path "/home/klaes/lib/web-mode/")
 (add-to-list 'load-path "/home/klaes/.cabal/share/ghc-mod-1.11.0/")
+(add-to-list 'load-path "/home/klaes/lib/emacs-flymake/")
 (add-to-list 'load-path "/usr/bin/")
 (setenv "PATH"
         (concat (expand-file-name "/home/klaes/bin/")
                 path-separator (getenv "PATH")))
 (setq exec-path (append exec-path '("/home/klaes/bin")))
 
+;; Using MELPA
+(require 'package)
+(add-to-list 'package-archives
+  '("melpa" . "http://melpa.milkbox.net/packages/") t)
 
 ;; Multiple cursors in emacs
 (add-to-list 'load-path "/usr/share/emacs/site-lisp/multiple-cursors")
@@ -27,6 +32,9 @@
 (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
 (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
 
+
+;; Enable magit for git in emacs
+(require 'magit)
 
 ;; Auto completion mode in emacs
 (add-to-list 'load-path "/usr/share/emacs/site-lisp/auto-complete")
@@ -100,6 +108,7 @@
 
 
 ;; Add ghc-mode hook
+(require 'flymake) 
 (autoload 'ghc-init "ghc" nil t)
 (add-hook 'haskell-mode-hook (lambda () (ghc-init) (flymake-mode)))
 
@@ -597,7 +606,7 @@ See the documentation for the command `next-error' for more information."
   (erc :server "localhost" :port 6667 :nick "klaes")
   )
 
-(defun ercfreenode () (interactive)
+(defun freenode () (interactive)
   (erc :server "irc.freenode.net" :port 6667 :nick "klaes")
   )
 
